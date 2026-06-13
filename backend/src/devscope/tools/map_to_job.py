@@ -92,9 +92,11 @@ def register(
         try:
             raw = await llm.map_to_job_structured(profile_text, jd)
         except GroqError as exc:
-            raise ValueError(f"LLM service error: {exc}") from exc
+            log.warning("tool.map_to_job.llm_error", error=str(exc))
+            raise ValueError("LLM service temporarily unavailable. Please try again.") from exc
         except Exception as exc:
-            raise ValueError(f"LLM call failed: {exc}") from exc
+            log.warning("tool.map_to_job.llm_error", error=str(exc))
+            raise ValueError("LLM service temporarily unavailable. Please try again.") from exc
 
         if isinstance(raw, str):
             try:

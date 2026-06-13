@@ -91,11 +91,17 @@ class GitHubClient:
                 pass
 
         if resp.status_code == 404:
-            raise GitHubAPIError(f"Not found: {path}")
-        if resp.status_code == 403 and "rate limit" in resp.text.lower():
-            raise GitHubAPIError("GitHub rate limit exceeded - try again later.")
+            raise GitHubAPIError("Profile or repository not found.")
+        if resp.status_code in (403, 429) or (
+            resp.status_code == 403 and "rate limit" in resp.text.lower()
+        ):
+            log.warning("gh.api_error", status=resp.status_code, path=path, detail=resp.text[:200])
+            raise GitHubAPIError(
+                "GitHub API limit reached. Please try again in a few minutes."
+            )
         if resp.status_code >= 400:
-            raise GitHubAPIError(f"GitHub {resp.status_code}: {resp.text[:200]}")
+            log.warning("gh.api_error", status=resp.status_code, path=path, detail=resp.text[:200])
+            raise GitHubAPIError("Error querying the GitHub API.")
         return resp.json()
 
     async def _get_cached(self, cache_key: str, path: str, params: dict | None = None) -> Any:

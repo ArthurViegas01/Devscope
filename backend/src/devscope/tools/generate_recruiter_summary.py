@@ -127,9 +127,11 @@ def register(
                     )
                     batch_buf = []
         except GroqError as exc:
-            raise ValueError(f"LLM service error: {exc}") from exc
+            log.warning("tool.generate_recruiter_summary.llm_error", error=str(exc))
+            raise ValueError("LLM service temporarily unavailable. Please try again.") from exc
         except Exception as exc:
-            raise ValueError(f"LLM stream failed: {exc}") from exc
+            log.warning("tool.generate_recruiter_summary.llm_error", error=str(exc))
+            raise ValueError("LLM service temporarily unavailable. Please try again.") from exc
 
         markdown = "".join(chunks)
         log.info(
