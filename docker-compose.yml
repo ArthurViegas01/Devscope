@@ -22,7 +22,7 @@ services:
       - --appendonly
       - "yes"
       - --requirepass
-      - ${REDIS_PASSWORD:-devpassword}
+      - ${REDIS_PASSWORD:?Set REDIS_PASSWORD in backend/.env before running docker compose}
       - --maxmemory
       - 256mb
       - --maxmemory-policy
@@ -32,7 +32,7 @@ services:
     volumes:
       - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-devpassword}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:?REDIS_PASSWORD not set}", "ping"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -50,7 +50,7 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      REDIS_URL: redis://:${REDIS_PASSWORD:-devpassword}@redis:6379/0
+      REDIS_URL: redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD in backend/.env}@redis:6379/0
       MCP_HOST: 0.0.0.0
       MCP_PORT: "8000"
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
