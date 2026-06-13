@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from devscope.logging_config import get_logger
 from devscope.models.analysis import JobMatchResult, ProfileAnalysis
 from devscope.services.github_client import GitHubAPIError, GitHubClient
+from devscope.services.llm_budget import LLMBudget
 from devscope.services.llm_service import LLMService
 from devscope.services.profile_analyzer import ProfileAnalyzer
 from devscope.tools.analyze_profile import _validate_username
@@ -40,6 +41,7 @@ def register(
     github: GitHubClient,
     analyzer: ProfileAnalyzer,
     llm: LLMService,
+    budget: LLMBudget,
 ) -> None:
     @mcp.tool(
         name="map_to_job",
@@ -64,6 +66,9 @@ def register(
 
         profile = analyzer.analyze(user, repos)
         profile_text = _profile_to_text(profile)
+
+        if not await budget.consume():
+            raise ValueError("Daily LLM request limit reached. Please try again tomorrow.")
 
         try:
             raw = await llm.map_to_job_structured(profile_text, job_description.strip())

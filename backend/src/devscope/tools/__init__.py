@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from mcp.server.fastmcp import FastMCP
 
-from devscope.services import GitHubClient, LLMService, ProfileAnalyzer
+from devscope.services import GitHubClient, LLMBudget, LLMService, ProfileAnalyzer
 from devscope.tools.analyze_profile import register as register_analyze_profile
 from devscope.tools.evaluate_repository import register as register_evaluate_repo
 from devscope.tools.generate_recruiter_summary import (
@@ -25,10 +25,11 @@ class Services:
     github: GitHubClient
     analyzer: ProfileAnalyzer
     llm: LLMService
+    budget: LLMBudget
 
 
 def register_tools(mcp: FastMCP, services: Services) -> None:
     register_analyze_profile(mcp, services.github, services.analyzer)
     register_evaluate_repo(mcp, services.github)
-    register_map_to_job(mcp, services.github, services.analyzer, services.llm)
-    register_generate_summary(mcp, services.github, services.analyzer, services.llm)
+    register_map_to_job(mcp, services.github, services.analyzer, services.llm, services.budget)
+    register_generate_summary(mcp, services.github, services.analyzer, services.llm, services.budget)

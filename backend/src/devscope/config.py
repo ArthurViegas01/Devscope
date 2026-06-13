@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     mcp_host: str = "0.0.0.0"  # noqa: S104
     mcp_port: int = 8000
 
+    # Auth
+    mcp_auth_token: SecretStr = Field(..., description="Static bearer token for the /mcp endpoint")
+
     # Integrations
     github_token: SecretStr = Field(..., description="GitHub PAT")
     github_api_base: str = "https://api.github.com"
@@ -44,6 +47,9 @@ class Settings(BaseSettings):
     # Redis
     redis_url: RedisDsn = Field(..., description="Redis connection URL")
     cache_ttl_seconds: int = 3600
+
+    # LLM spend control
+    llm_daily_budget: int = Field(1000, description="Max LLM calls per calendar day")
 
     # Rate limiting
     rate_limit_per_minute: int = 30

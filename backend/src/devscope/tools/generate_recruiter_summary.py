@@ -14,6 +14,7 @@ from mcp.server.fastmcp import Context, FastMCP
 
 from devscope.logging_config import get_logger
 from devscope.services.github_client import GitHubAPIError, GitHubClient
+from devscope.services.llm_budget import LLMBudget
 from devscope.services.llm_service import LLMService
 from devscope.services.profile_analyzer import ProfileAnalyzer
 from devscope.tools.analyze_profile import _validate_username
@@ -41,6 +42,7 @@ def register(
     github: GitHubClient,
     analyzer: ProfileAnalyzer,
     llm: LLMService,
+    budget: LLMBudget,
 ) -> None:
     @mcp.tool(
         name="generate_recruiter_summary",
@@ -62,6 +64,9 @@ def register(
             raise ValueError(str(exc)) from exc
 
         profile = analyzer.analyze(user, repos)
+
+        if not await budget.consume():
+            raise ValueError("Daily LLM request limit reached. Please try again tomorrow.")
 
         langs = (
             ", ".join(f"{ls.language} {ls.percentage}%" for ls in profile.top_languages)

@@ -18,8 +18,8 @@ from mcp.server.fastmcp import FastMCP
 
 from devscope.config import Settings, get_settings
 from devscope.logging_config import configure_logging, get_logger
-from devscope.middleware import RateLimitMiddleware
-from devscope.services import GitHubClient, LLMService, ProfileAnalyzer
+from devscope.middleware import BearerAuthMiddleware, RateLimitMiddleware
+from devscope.services import GitHubClient, LLMBudget, LLMService, ProfileAnalyzer
 from devscope.services.cache_service import CacheService
 from devscope.tools import Services, register_tools
 
@@ -86,7 +86,8 @@ def create_app() -> FastAPI:
     github = GitHubClient(settings, cache)
     analyzer = ProfileAnalyzer()
     llm = LLMService(settings)
-    services = Services(github=github, analyzer=analyzer, llm=llm)
+    budget = LLMBudget(redis_client, settings.llm_daily_budget)
+    services = Services(github=github, analyzer=analyzer, llm=llm, budget=budget)
 
     app = FastAPI(
         title="Devscope MCP",
@@ -134,9 +135,14 @@ def create_app() -> FastAPI:
             "health": "/health",
         }
 
-    # Mount the FastMCP ASGI app at "/" so /mcp is forwarded into the sub-app.
-    # This must come AFTER the route definitions above.
-    app.mount("/", mcp_asgi)
+    # Wrap the MCP sub-app with bearer auth before mounting.
+    # FastAPI routes (/health, /) are already registered above and matched first
+    # by Starlette, so they remain public. Only requests that fall through to
+    # the mount (i.e., /mcp) are subject to auth.
+    mcp_asgi_authed = BearerAuthMiddleware(
+        mcp_asgi, token=settings.mcp_auth_token.get_secret_value()
+    )
+    app.mount("/", mcp_asgi_authed)
 
     app.add_middleware(
         CORSMiddleware,
