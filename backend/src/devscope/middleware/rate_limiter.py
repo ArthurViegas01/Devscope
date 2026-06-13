@@ -18,6 +18,7 @@ real client IP that Railway received. Clients cannot inject into that position.
 from __future__ import annotations
 
 import json
+import time
 from typing import TYPE_CHECKING
 
 import redis.asyncio as redis
@@ -29,6 +30,30 @@ if TYPE_CHECKING:
     pass
 
 log = get_logger(__name__)
+
+
+class _InMemoryWindow:
+    """Fixed-window-per-minute fallback used when Redis is unavailable.
+
+    Single-process only: in multi-worker setups each process has its own
+    window, so the effective limit is per_minute * workers. Acceptable as a
+    temporary backstop; the primary limiter is Redis.
+    """
+
+    def __init__(self, per_minute: int) -> None:
+        self._limit = per_minute
+        self._windows: dict[str, tuple[int, float]] = {}
+
+    def check(self, ip: str) -> tuple[bool, int]:
+        """Increment counter. Returns (allowed, retry_after_seconds)."""
+        now = time.monotonic()
+        count, start = self._windows.get(ip, (0, now))
+        if now - start >= 60:
+            count, start = 0, now
+        count += 1
+        self._windows[ip] = (count, start)
+        retry_after = max(1, int(60 - (now - start)))
+        return count <= self._limit, retry_after
 
 _RATE_LIMIT_LUA = """
 local current = redis.call('INCR', KEYS[1])
@@ -75,6 +100,7 @@ class RateLimitMiddleware:
         self._exempt = exempt_paths
         self._ns = namespace
         self._script = redis_client.register_script(_RATE_LIMIT_LUA)
+        self._fallback = _InMemoryWindow(per_minute)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -93,6 +119,11 @@ class RateLimitMiddleware:
             current, ttl = await self._script(keys=[key], args=[60])
         except Exception:  # noqa: BLE001
             log.warning("ratelimit.redis_error", ip=ip, path=path)
+            allowed, retry_after_fb = self._fallback.check(ip)
+            if not allowed:
+                log.info("ratelimit.fallback_exceeded", ip=ip, path=path)
+                await self._send_429(send, retry_after_fb)
+                return
             await self._app(scope, receive, send)
             return
 
