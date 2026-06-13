@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP
 
@@ -11,6 +12,12 @@ from devscope.models.analysis import RepositoryEvaluation
 from devscope.services.github_client import GitHubAPIError, GitHubClient
 
 log = get_logger(__name__)
+
+# Strict allow-lists: reject dot-segments and anything outside alphanumeric/hyphen.
+# _OWNER_RE follows GitHub username/org rules (1-39 chars, no leading/trailing hyphen).
+_OWNER_RE = re.compile(r"^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$")
+# _REPO_RE allows dots and underscores as GitHub permits (1-100 chars).
+_REPO_RE = re.compile(r"^[A-Za-z0-9._-]{1,100}$")
 
 ARCH_SIGNALS: dict[str, str] = {
     "Dockerfile": "containerised",
@@ -37,11 +44,20 @@ REPO_URL_RE = re.compile(
 )
 
 
+def _validate_segment(value: str, pattern: re.Pattern, label: str) -> str:
+    """Reject dot-segments and values that don't match the strict allow-list."""
+    if value in (".", "..") or not pattern.match(value):
+        raise ValueError(f"Invalid {label}: {value!r}")
+    return quote(value, safe="")
+
+
 def _parse_repo_url(url: str) -> tuple[str, str]:
     m = REPO_URL_RE.match(url.strip())
     if not m:
         raise ValueError(f"Not a valid GitHub repo URL: {url!r}")
-    return m.group(1), m.group(2)
+    owner = _validate_segment(m.group(1), _OWNER_RE, "owner")
+    repo = _validate_segment(m.group(2), _REPO_RE, "repo")
+    return owner, repo
 
 
 def register(mcp: FastMCP, github: GitHubClient) -> None:
