@@ -13,6 +13,7 @@ Cache keys:
 from __future__ import annotations
 
 import base64
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -25,7 +26,8 @@ from devscope.services.cache_service import CacheService
 log = get_logger(__name__)
 
 PER_PAGE = 100
-MAX_PAGES = 5
+MAX_PAGES = 2  # reduced from 5 to limit PAT usage per request (200 repos max)
+_GH_RATELIMIT_WARN = 500  # warn when X-RateLimit-Remaining drops below this
 
 
 class GitHubAPIError(RuntimeError):
@@ -55,11 +57,38 @@ class GitHubClient:
     async def aclose(self) -> None:
         await self._http.aclose()
 
+    async def _check_gh_budget(self) -> None:
+        """Increment hourly call counter. Raises GitHubAPIError when budget exceeded."""
+        hour = datetime.now(UTC).strftime("%Y-%m-%dT%H")
+        key = f"gh:budget:{hour}"
+        try:
+            n = await self._cache.client.incr(key)
+            if n == 1:
+                await self._cache.client.expire(key, 3600)
+            if n > self._settings.github_hourly_budget:
+                log.warning("gh.budget_exceeded", count=n, cap=self._settings.github_hourly_budget)
+                raise GitHubAPIError(
+                    "GitHub API hourly budget exceeded. Please try again in a few minutes."
+                )
+        except GitHubAPIError:
+            raise
+        except Exception:  # noqa: BLE001
+            log.warning("gh_budget.redis_error")
+
     async def _get(self, path: str, params: dict[str, Any] | None = None) -> Any:
+        await self._check_gh_budget()
         try:
             resp = await self._http.get(path, params=params)
         except httpx.TimeoutException as exc:
             raise GitHubAPIError(f"GitHub API timeout: {path}") from exc
+
+        remaining = resp.headers.get("x-ratelimit-remaining")
+        if remaining is not None:
+            try:
+                if int(remaining) < _GH_RATELIMIT_WARN:
+                    log.warning("gh.ratelimit_low", remaining=int(remaining), path=path)
+            except ValueError:
+                pass
 
         if resp.status_code == 404:
             raise GitHubAPIError(f"Not found: {path}")

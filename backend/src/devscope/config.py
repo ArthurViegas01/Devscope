@@ -51,6 +51,11 @@ class Settings(BaseSettings):
     # LLM spend control
     llm_daily_budget: int = Field(1000, description="Max LLM calls per calendar day")
 
+    # GitHub API spend control (GitHub allows 5000 req/h per PAT)
+    github_hourly_budget: int = Field(
+        4000, description="Max GitHub API calls per clock-hour before rejecting requests"
+    )
+
     # Rate limiting
     rate_limit_per_minute: int = 30
     trusted_proxy_depth: int = Field(
