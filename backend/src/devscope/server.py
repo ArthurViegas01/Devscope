@@ -89,12 +89,20 @@ def create_app() -> FastAPI:
     budget = LLMBudget(redis_client, settings.llm_daily_budget)
     services = Services(github=github, analyzer=analyzer, llm=llm, budget=budget)
 
+    # Disable interactive API docs in production to avoid schema disclosure.
+    docs_url = None if settings.is_production else "/docs"
+    redoc_url = None if settings.is_production else "/redoc"
+    openapi_url = None if settings.is_production else "/openapi.json"
+
     app = FastAPI(
         title="Devscope MCP",
         version="0.1.0",
         description="GitHub Portfolio Intel - MCP server",
         lifespan=lifespan,
         redirect_slashes=False,
+        docs_url=docs_url,
+        redoc_url=redoc_url,
+        openapi_url=openapi_url,
     )
 
     mcp = _build_mcp(services, settings)
@@ -109,31 +117,18 @@ def create_app() -> FastAPI:
     # Starlette matches /health and / against these routes first.
     @app.get("/health", tags=["meta"])
     async def health() -> dict:
-        """Liveness and readiness probe. Checks Redis connectivity."""
-        s: Settings = app.state.settings
+        """Liveness and readiness probe."""
         redis_ok = False
         try:
             await app.state.redis.ping()
             redis_ok = True
         except Exception:  # noqa: BLE001, S110
             pass
-        return {
-            "status": "ok" if redis_ok else "degraded",
-            "environment": s.environment,
-            "region": s.deploy_region,
-            "model": s.groq_model,
-            "redis": "ok" if redis_ok else "down",
-            "version": "0.1.0",
-        }
+        return {"status": "ok" if redis_ok else "degraded"}
 
     @app.get("/", tags=["meta"])
     async def root() -> dict:
-        return {
-            "service": "devscope",
-            "mcp_endpoint": "/mcp",
-            "docs": "/docs",
-            "health": "/health",
-        }
+        return {"service": "devscope", "health": "/health"}
 
     # Wrap the MCP sub-app with bearer auth before mounting.
     # FastAPI routes (/health, /) are already registered above and matched first
