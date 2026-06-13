@@ -53,9 +53,18 @@ def register(
         ),
     )
     async def map_to_job(username: str, job_description: str) -> JobMatchResult:
+        _JOB_MIN = 30
+        _JOB_MAX = 12_000
+
         clean = _validate_username(username)
-        if not job_description or len(job_description.strip()) < 30:
+        jd = job_description.strip() if job_description else ""
+        if len(jd) < _JOB_MIN:
             raise ValueError("job_description must be at least 30 characters of meaningful text")
+        if len(jd) > _JOB_MAX:
+            raise ValueError(
+                f"job_description must not exceed {_JOB_MAX} characters "
+                f"(received {len(jd)})"
+            )
 
         log.info("tool.map_to_job.start", username=clean)
         try:
@@ -71,7 +80,7 @@ def register(
             raise ValueError("Daily LLM request limit reached. Please try again tomorrow.")
 
         try:
-            raw = await llm.map_to_job_structured(profile_text, job_description.strip())
+            raw = await llm.map_to_job_structured(profile_text, jd)
         except GroqError as exc:
             raise ValueError(f"LLM service error: {exc}") from exc
         except Exception as exc:
