@@ -26,3 +26,9 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy        = "strict-origin-when-cross-origin"
     Permissions-Policy     = "camera=(), microphone=(), geolocation=()"
+    # HSTS: tell browsers to always use HTTPS for this domain (1 year).
+    # Remove or shorten max-age before changing from HTTPS.
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    # CSP: adjust connect-src to match your exact Railway backend URL in
+    # production (replace *.up.railway.app with the specific subdomain).
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://avatars.githubusercontent.com; connect-src 'self' https://*.up.railway.app; frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
