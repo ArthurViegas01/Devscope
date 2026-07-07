@@ -79,6 +79,26 @@ npx @modelcontextprotocol/inspector http://localhost:8000/mcp
 
 See [docs/DEPLOY.md](docs/DEPLOY.md) for the full guide covering Railway, Upstash, Netlify, Terraform state setup, GitHub Actions secrets, and rollback procedures.
 
+## Security
+
+The `/mcp` endpoint is public on the internet and two tools spend a paid LLM plus a shared GitHub PAT, so the hardening focuses on access control and cost abuse.
+
+**Authentication.** A pure ASGI `BearerAuthMiddleware` wraps the MCP sub-app: every `/mcp` request must send `Authorization: Bearer <MCP_AUTH_TOKEN>`, compared in constant time (`hmac.compare_digest`). `/health` and `/` stay public. `MCP_AUTH_TOKEN` has no default, so the service fails fast if it is unset.
+
+**LLM cost control.** A daily Redis counter (fail-closed) caps combined `map_to_job` + `generate_recruiter_summary` calls at `LLM_DAILY_BUDGET`. `job_description` is rejected above 12,000 characters before the prompt is built.
+
+**GitHub quota protection.** An hourly Redis budget guards the shared PAT, pagination is capped at `MAX_PAGES=2` (200 repos/request), and a low-remaining alarm fires when `X-RateLimit-Remaining < 500`.
+
+**SSRF / path-traversal.** `evaluate_repository` validates `owner` and `repo` against strict allowlists and explicitly rejects `.` and `..` (with `quote()` as defence in depth) so a crafted `repo_url` cannot pivot the server's PAT onto arbitrary GitHub API paths.
+
+**Rate limiting.** Fixed window of 30 req/min per IP. On a Redis error the middleware fails closed to an in-memory window instead of failing open.
+
+**Prompt injection.** Untrusted bio/description/`job_description` text is stripped of control chars, truncated, and wrapped in `[BEGIN.../END...]` fences; both system prompts instruct the model to treat fenced blocks as data, never instructions.
+
+**Transport and disclosure.** `netlify.toml` sends CSP, HSTS, and frame-ancestors on the frontend. GitHub and LLM errors are logged internally and returned to clients as generic messages. In production `/health` returns only a status, `/` omits the MCP endpoint, and `/docs` / `/openapi.json` are disabled. The container runs as a non-root user and CORS uses an explicit non-wildcard origin list.
+
+**Production checklist.** Set `MCP_AUTH_TOKEN` (`python -c "import secrets; print(secrets.token_urlsafe(32))"`) and `REDIS_PASSWORD` in the platform env, and set a monthly spend cap in the Groq console as an independent second barrier.
+
 ## Key decisions
 
 **FastMCP over raw SDK.** FastMCP handles session management, request routing, and transport negotiation. The decorator API keeps tool registration close to the logic and lets Pydantic v2 models serve directly as return types.
