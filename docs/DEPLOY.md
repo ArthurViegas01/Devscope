@@ -246,7 +246,7 @@ git push origin main
 | `GROQ_API_KEY` | Yes | - | Groq console API key |
 | `REDIS_URL` | Yes | - | Full `rediss://` Upstash URL with token (the app reads `REDIS_URL`; Terraform sets it from `TF_VAR_upstash_redis_url`) |
 | `CORS_ORIGINS` | Yes (prod) | `http://localhost:5173` | Comma-separated list of allowed origins |
-| `GROQ_MODEL` | No | `llama-3.3-70b-versatile` | Groq model ID |
+| `GROQ_MODEL` | No | `openai/gpt-oss-120b` | Groq model ID |
 | `RATE_LIMIT_PER_MINUTE` | No | `30` | Requests per IP per minute |
 | `TRUSTED_PROXY_DEPTH` | No | `1` | Number of proxies in front of the backend (Railway = 1) |
 | `ENVIRONMENT` | No | `development` | `production` enables JSON structlog output |

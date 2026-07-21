@@ -39,8 +39,10 @@ locals {
     MCP_PORT              = "8000"
     ENVIRONMENT           = "production"
     LOG_LEVEL             = var.log_level
+    MCP_AUTH_TOKEN        = var.mcp_auth_token
     GITHUB_TOKEN          = var.github_token
     GROQ_API_KEY          = var.groq_api_key
+    GROQ_MODEL            = var.groq_model
     REDIS_URL             = var.upstash_redis_url
     RATE_LIMIT_PER_MINUTE = tostring(var.rate_limit_per_minute)
     DEPLOY_REGION         = var.region

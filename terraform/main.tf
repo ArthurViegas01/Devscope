@@ -18,9 +18,9 @@
 locals {
   resource_prefix = "${var.project_name}-${var.environment}"
   # Railway subdomains are globally unique and claimed first-come-first-served.
-  # "devscope-api-production" is already taken by an unrelated service, so we
-  # use the "-mcp-" stem. If apply fails with a subdomain conflict, change this.
-  backend_subdomain    = "${var.project_name}-mcp-${var.environment}"
+  # This matches the live backend at devscope-production.up.railway.app. If a
+  # fresh apply hits a subdomain conflict, change this stem.
+  backend_subdomain    = "${var.project_name}-${var.environment}"
   netlify_frontend_url = "https://${var.netlify_site_name}.netlify.app"
 }
 
@@ -38,6 +38,8 @@ module "railway" {
 
   github_token          = var.github_token
   groq_api_key          = var.groq_api_key
+  groq_model            = var.groq_model
+  mcp_auth_token        = var.mcp_auth_token
   upstash_redis_url     = var.upstash_redis_url
   rate_limit_per_minute = var.rate_limit_per_minute
   log_level             = var.log_level
@@ -51,7 +53,11 @@ module "netlify" {
   site_name     = var.netlify_site_name
   custom_domain = var.frontend_custom_domain
 
+  # The frontend talks to a same-origin Netlify Function at /mcp, which injects
+  # the bearer token server-side and forwards to this backend URL. The browser
+  # never sees the token, so the public demo works without leaking it.
   backend_public_url = "${module.railway.backend_public_url}/mcp"
+  mcp_auth_token     = var.mcp_auth_token
 
   environment = var.environment
 }

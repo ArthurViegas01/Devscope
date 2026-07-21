@@ -47,6 +47,18 @@ variable "groq_api_key" {
   sensitive = true
 }
 
+variable "groq_model" {
+  description = "Groq model id used by the LLM service."
+  type        = string
+  default     = "openai/gpt-oss-120b"
+}
+
+variable "mcp_auth_token" {
+  description = "Static bearer token the backend requires on /mcp. Required for boot."
+  type        = string
+  sensitive   = true
+}
+
 variable "upstash_redis_url" {
   description = "rediss:// connection URL from Upstash (cache + rate limiter)."
   type        = string

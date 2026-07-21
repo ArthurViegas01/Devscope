@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 const STACK: Array<{ label: string; hint: string }> = [
   { label: "Python", hint: "Backend language" },
   { label: "FastMCP", hint: "MCP server framework" },
-  { label: "Groq", hint: "LLM inference (Llama 3.3)" },
+  { label: "Groq", hint: "LLM inference" },
   { label: "Redis", hint: "Caching + rate limiting" },
   { label: "React", hint: "TypeScript + Vite frontend" },
   { label: "Railway", hint: "Backend hosting" },

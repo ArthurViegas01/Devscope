@@ -83,6 +83,24 @@ variable "groq_api_key" {
   }
 }
 
+variable "groq_model" {
+  description = "Groq model id used by the LLM service."
+  type        = string
+  default     = "openai/gpt-oss-120b"
+}
+
+variable "mcp_auth_token" {
+  description = "Static bearer token guarding /mcp. The SAME value is used by the backend to validate and by the Netlify proxy function to sign requests. Set via TF_VAR_mcp_auth_token."
+  type        = string
+  sensitive   = true
+  default     = ""
+
+  validation {
+    condition     = var.mcp_auth_token == "" || length(var.mcp_auth_token) >= 20
+    error_message = "mcp_auth_token looks too short to be a secure token."
+  }
+}
+
 variable "upstash_redis_url" {
   description = "Upstash Redis URL (rediss://default:<token>@<host>:<port>)."
   type        = string

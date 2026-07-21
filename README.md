@@ -40,7 +40,7 @@ FastMCP mounts as an ASGI sub-app under FastAPI. Rate limiting runs as a pure AS
 
 ## Stack
 
-Python 3.12, FastMCP, FastAPI, GitHub REST API v3, httpx, LangChain, Groq / Llama 3.3-70b, Upstash Redis, Pydantic v2, structlog, Docker, Railway, Netlify, Terraform
+Python 3.12, FastMCP, FastAPI, GitHub REST API v3, httpx, LangChain, Groq / GPT-OSS-120b, Upstash Redis, Pydantic v2, structlog, Docker, Railway, Netlify, Terraform
 
 ## Quick start
 

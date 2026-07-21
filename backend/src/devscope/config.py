@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     github_api_base: str = "https://api.github.com"
 
     groq_api_key: SecretStr = Field(..., description="Groq API key")
-    groq_model: str = "llama-3.3-70b-versatile"
+    groq_model: str = "openai/gpt-oss-120b"
 
     # Redis
     redis_url: RedisDsn = Field(..., description="Redis connection URL")

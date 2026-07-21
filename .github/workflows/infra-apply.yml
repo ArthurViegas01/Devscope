@@ -34,6 +34,7 @@ jobs:
       TF_VAR_github_token:      ${{ secrets.GITHUB_PAT_FOR_BACKEND }}
       TF_VAR_groq_api_key:      ${{ secrets.GROQ_API_KEY }}
       TF_VAR_upstash_redis_url: ${{ secrets.UPSTASH_REDIS_URL }}
+      TF_VAR_mcp_auth_token:    ${{ secrets.MCP_AUTH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3

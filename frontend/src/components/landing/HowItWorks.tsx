@@ -20,7 +20,7 @@ const STEPS = [
     icon: Sparkles,
     kicker: "03",
     title: "Reason with an LLM",
-    body: "Groq-hosted Llama 3.3 turns raw signals into candid, recruiter-grade insight, streamed back token by token.",
+    body: "A Groq-hosted LLM turns raw signals into candid, recruiter-grade insight, streamed back token by token.",
   },
 ];
 

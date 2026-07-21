@@ -7,6 +7,7 @@
 #   export TF_VAR_netlify_token="..."
 #   export TF_VAR_github_token="ghp_..."
 #   export TF_VAR_groq_api_key="gsk_..."
+#   export TF_VAR_mcp_auth_token="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
 #   export TF_VAR_upstash_redis_url="rediss://default:...@us1-XXX.upstash.io:6379"
 #   export TF_VAR_netlify_site_id="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 #
@@ -25,7 +26,11 @@ railway_region = "us-east4"
 # netlify_token     = "REPLACE_ME"
 # github_token      = "ghp_REPLACE_ME"
 # groq_api_key      = "gsk_REPLACE_ME"
+# mcp_auth_token    = "REPLACE_ME"  # same value on backend + Netlify proxy
 # upstash_redis_url = "rediss://default:REPLACE_ME@us1-XXX.upstash.io:6379"
+
+# LLM model (optional; defaults to openai/gpt-oss-120b)
+# groq_model = "openai/gpt-oss-120b"
 
 # Backend
 backend_image         = "ghcr.io/ArthurViegas01/devscope-backend:latest"

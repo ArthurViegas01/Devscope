@@ -7,6 +7,9 @@ name: infra-plan
 on:
   pull_request:
     paths: ["terraform/**", ".github/workflows/infra-plan.yml"]
+  push:
+    branches: [main]
+    paths: ["terraform/**", ".github/workflows/infra-plan.yml"]
 
 permissions:
   contents: read
@@ -30,6 +33,7 @@ jobs:
       TF_VAR_github_token:      ${{ secrets.GITHUB_PAT_FOR_BACKEND }}
       TF_VAR_groq_api_key:      ${{ secrets.GROQ_API_KEY }}
       TF_VAR_upstash_redis_url: ${{ secrets.UPSTASH_REDIS_URL }}
+      TF_VAR_mcp_auth_token:    ${{ secrets.MCP_AUTH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -48,12 +52,16 @@ jobs:
 
       - name: terraform plan
         id: plan
+        # Dependabot runs have no access to repo secrets, so plan cannot
+        # authenticate and would always fail. fmt/init/validate above still
+        # cover provider-bump PRs; only the secret-dependent plan is skipped.
+        if: github.actor != 'dependabot[bot]'
         # tfvars values come from defaults; secrets via TF_VAR_* above.
         run: terraform plan -no-color -input=false -lock=false
         continue-on-error: true
 
       - name: Comment plan on PR
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
         uses: actions/github-script@v7
         with:
           script: |
