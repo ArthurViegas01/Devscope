@@ -36,7 +36,7 @@ jobs:
       TF_VAR_upstash_redis_url: ${{ secrets.UPSTASH_REDIS_URL }}
       TF_VAR_mcp_auth_token:    ${{ secrets.MCP_AUTH_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.9.5"
