@@ -32,4 +32,6 @@ def register_tools(mcp: FastMCP, services: Services) -> None:
     register_analyze_profile(mcp, services.github, services.analyzer)
     register_evaluate_repo(mcp, services.github)
     register_map_to_job(mcp, services.github, services.analyzer, services.llm, services.budget)
-    register_generate_summary(mcp, services.github, services.analyzer, services.llm, services.budget)
+    register_generate_summary(
+        mcp, services.github, services.analyzer, services.llm, services.budget
+    )

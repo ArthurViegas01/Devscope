@@ -55,6 +55,7 @@ class _InMemoryWindow:
         retry_after = max(1, int(60 - (now - start)))
         return count <= self._limit, retry_after
 
+
 _RATE_LIMIT_LUA = """
 local current = redis.call('INCR', KEYS[1])
 if current == 1 then

@@ -21,6 +21,9 @@ log = get_logger(__name__)
 
 _CTRL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 
+_JOB_MIN = 30
+_JOB_MAX = 12_000
+
 
 def _sanitize(text: str, max_len: int = 500) -> str:
     return _CTRL_RE.sub("", text)[:max_len]
@@ -63,17 +66,13 @@ def register(
         ),
     )
     async def map_to_job(username: str, job_description: str) -> JobMatchResult:
-        _JOB_MIN = 30
-        _JOB_MAX = 12_000
-
         clean = _validate_username(username)
         jd = job_description.strip() if job_description else ""
         if len(jd) < _JOB_MIN:
             raise ValueError("job_description must be at least 30 characters of meaningful text")
         if len(jd) > _JOB_MAX:
             raise ValueError(
-                f"job_description must not exceed {_JOB_MAX} characters "
-                f"(received {len(jd)})"
+                f"job_description must not exceed {_JOB_MAX} characters (received {len(jd)})"
             )
 
         log.info("tool.map_to_job.start", username=clean)

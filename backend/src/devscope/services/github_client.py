@@ -96,9 +96,7 @@ class GitHubClient:
             resp.status_code == 403 and "rate limit" in resp.text.lower()
         ):
             log.warning("gh.api_error", status=resp.status_code, path=path, detail=resp.text[:200])
-            raise GitHubAPIError(
-                "GitHub API limit reached. Please try again in a few minutes."
-            )
+            raise GitHubAPIError("GitHub API limit reached. Please try again in a few minutes.")
         if resp.status_code >= 400:
             log.warning("gh.api_error", status=resp.status_code, path=path, detail=resp.text[:200])
             raise GitHubAPIError("Error querying the GitHub API.")
