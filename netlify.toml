@@ -13,6 +13,19 @@
   NODE_VERSION = "20"
   NPM_FLAGS    = "--no-audit --no-fund"
 
+# Serverless proxy that injects the MCP bearer token (see functions/mcp.mts).
+# Path is relative to the base directory ("frontend").
+[functions]
+  directory = "netlify/functions"
+
+# Health probe: plain proxy to the backend (public endpoint, no auth needed),
+# so the frontend can poll same-origin /health.
+[[redirects]]
+  from   = "/health"
+  to     = "https://devscope-production.up.railway.app/health"
+  status = 200
+  force  = true
+
 # SPA: route everything through index.html
 [[redirects]]
   from   = "/*"
