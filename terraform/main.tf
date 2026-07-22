@@ -1,6 +1,16 @@
 # =============================================================================
 # main.tf - Devscope root composition
 #
+# !!! STATUS: TERRAFORM IS DISABLED / NOT WIRED TO THE LIVE INFRA (2026-07-21).
+# The production stack (Railway backend, Netlify site, Upstash Redis) was
+# created and is managed MANUALLY through each provider's UI. This config has
+# NO remote state and does not track those resources, so `terraform apply`
+# would try to CREATE DUPLICATES and would conflict. Do NOT run apply until a
+# remote backend is configured and the existing resources are imported.
+# This config is kept declaratively correct (matches prod: subdomain, env vars,
+# proxy wiring, Groq model) so it is ready to adopt the real infra later.
+# The infra-apply workflow stays behind a manual APPLY confirmation gate.
+#
 # Wires together the Railway (backend) and Netlify (frontend) modules.
 # Redis lives outside Terraform on Upstash's free tier.
 #

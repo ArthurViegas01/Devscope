@@ -77,6 +77,8 @@ npx @modelcontextprotocol/inspector http://localhost:8000/mcp
 
 ## Deploy
 
+The production stack (Railway backend, Netlify frontend, Upstash Redis) is currently provisioned and managed **manually** through each provider's dashboard. The Terraform under `terraform/` is **disabled for now**: it has no remote state and does not track the live resources, so `terraform apply` is not safe to run (it would create duplicates). The config is kept declaratively correct so it can adopt the real infra later once a remote backend is set up and the resources are imported.
+
 See [docs/DEPLOY.md](docs/DEPLOY.md) for the full guide covering Railway, Upstash, Netlify, Terraform state setup, GitHub Actions secrets, and rollback procedures.
 
 ## Security

@@ -2,6 +2,8 @@
 
 This document covers everything you need to go from zero to a running production deployment: Railway (backend), Upstash (Redis), Netlify (frontend), Terraform, and CI/CD.
 
+> **Status (2026-07-21): Terraform is disabled.** The live stack is currently provisioned and managed **manually** via the Railway, Netlify, and Upstash dashboards. The Terraform config has no remote state and does not track those resources, so `terraform apply` would create duplicates and must NOT be run yet. The Terraform sections below describe the target IaC setup; follow them only when you are ready to configure a remote backend and import the existing resources. Day-to-day changes for now are made directly in each provider's dashboard.
+
 ---
 
 ## Prerequisites
